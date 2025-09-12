@@ -52,7 +52,7 @@ It can be run manually with `start.sh` or as a background service via **systemd*
 ├── kodi.service          # systemd unit file
 └── README.md
 
-````
+```
 
 ---
 
@@ -63,9 +63,10 @@ You can start Kodi in two ways:
 ### 1. Manual start (foreground testing)
 
 - **Without VPN (default bridge mode):**
+
   ```bash
-  ./start.sh
-````
+    ./start.sh
+  ```
 
 * **With VPN:**
 
@@ -82,7 +83,7 @@ You can start Kodi in two ways:
 
 A `kodi.service` unit file is included for systemd.
 
-#### Install service:
+#### Install service
 
 ```bash
 sudo cp opt/kodi.service /etc/systemd/system/kodi.service
@@ -90,7 +91,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable kodi.service
 ```
 
-#### Start service:
+#### Start service
 
 * **Default (bridge mode):**
 
