@@ -1,0 +1,29 @@
+[Unit]
+Description=Kodi (Podman Compose)
+Requires=podman.service
+After=network-online.target podman.service
+Wants=network-online.target
+
+[Service]
+# Ensure we always run in project directory
+WorkingDirectory=/opt/kodi-docker
+
+# Build images before starting
+ExecStartPre=/usr/bin/podman-compose build
+
+# Start script (handles VPN/bridge choice)
+ExecStart=/opt/kodi-docker/start.sh
+
+# Stop all containers on shutdown
+ExecStop=/usr/bin/podman-compose down
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Systemd integration
+KillMode=process
+TimeoutStopSec=60
+
+[Install]
+WantedBy=multi-user.target

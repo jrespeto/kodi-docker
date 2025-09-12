@@ -2,6 +2,7 @@
 
 This project provides a containerized **Kodi media center** environment with optional **OpenVPN client support**.
 It is designed for **testing Kodi plugins** in a reproducible, isolated environment with modern **Wayland + PipeWire/PulseAudio** support.
+It can be run manually with `start.sh` or as a background service via **systemd**.
 
 ---
 
@@ -13,6 +14,7 @@ It is designed for **testing Kodi plugins** in a reproducible, isolated environm
 - Wayland & XWayland support (for GUI display).
 - PipeWire/PulseAudio passthrough for audio.
 - Persistent Kodi configuration via `./kodi_home/.kodi`.
+- Run manually or automatically at boot with **systemd**.
 - Ideal for **Kodi plugin development & testing**.
 
 ---
@@ -46,65 +48,82 @@ It is designed for **testing Kodi plugins** in a reproducible, isolated environm
 │   ├── wait-for-ovpn.sh  # OVPN startup wrapper
 │   └── sockd.conf        # (optional) SOCKS5 proxy config
 ├── docker-compose.yml
-├── start.sh              # Launcher script
+├── start.sh              # Launcher script (with/without VPN)
+├── kodi.service          # systemd unit file
 └── README.md
 
 ````
 
 ---
 
-## ⚙️ Configuration
+## ▶️ Startup Options
 
-### Environment setup (handled by `start.sh`)
+You can start Kodi in two ways:
 
-`start.sh` automatically configures:
+### 1. Manual start (foreground testing)
 
-- `DISPLAY` → your X11/XWayland display (defaults to `:0`)
-- `WAYLAND_DISPLAY` → defaults to `wayland-0`
-- `XDG_RUNTIME_DIR` → defaults to `/run/user/$(id -u)`
-- `PULSE_SERVER` → defaults to `unix:${XDG_RUNTIME_DIR}/pulse/native`
-
-No manual `.env` file is required.
-
----
-
-## ▶️ Usage
-
-### Start Kodi (no VPN)
-```bash
-./start.sh
+- **Without VPN (default bridge mode):**
+  ```bash
+  ./start.sh
 ````
 
-* Starts Kodi container only
-* Sets `network_mode=bridge`
-* Suitable for local plugin development/testing
+* **With VPN:**
+
+  ```bash
+  ./start.sh vpn
+  ```
+
+  ⚠️ Requires `ovpn-config/client.ovpn` to exist.
+  If the file is missing, the script will error out.
 
 ---
 
-### Start Kodi (with VPN)
+### 2. Background service (systemd)
+
+A `kodi.service` unit file is included for systemd.
+
+#### Install service:
 
 ```bash
-./start.sh vpn
+sudo cp opt/kodi.service /etc/systemd/system/kodi.service
+sudo systemctl daemon-reload
+sudo systemctl enable kodi.service
 ```
 
-* Starts both `openvpn-client` and Kodi
-* Sets `KODI_NETWORK_MODE=service:openvpn-client`
-* Kodi routes all traffic through VPN container
+#### Start service:
 
----
-
-### Logs
-
-* Kodi logs:
+* **Default (bridge mode):**
 
   ```bash
-  podman logs -f kodi
+  sudo systemctl start kodi.service
   ```
-* OpenVPN logs:
+
+* **Always VPN mode:**
+  Edit `/etc/systemd/system/kodi.service` and change:
+
+  ```ini
+  ExecStart=/opt/kodi-docker/start.sh vpn
+  ```
+
+  Then restart:
 
   ```bash
-  podman logs -f openvpn-client
+  sudo systemctl daemon-reload
+  sudo systemctl restart kodi.service
   ```
+
+#### Manage service:
+
+```bash
+# Stop service
+sudo systemctl stop kodi.service
+
+# Restart service
+sudo systemctl restart kodi.service
+
+# View logs
+journalctl -u kodi.service -f
+```
 
 ---
 
@@ -134,7 +153,8 @@ Inside Kodi:
 
 ### 3. VPN testing
 
-Run with `./start.sh vpn` to test:
+Run with `./start.sh vpn` or configure systemd to always run in VPN mode.
+Use this for:
 
 * Region-locked streams
 * VPN-specific behavior
@@ -196,6 +216,7 @@ podman exec -it kodi curl ifconfig.me
 
 * Run `./start.sh` → Kodi in bridge mode (no VPN)
 * Run `./start.sh vpn` → Kodi routed through OpenVPN container
-* Wayland + PipeWire ready
+* Run with **systemd** (`systemctl start kodi`) for automatic startup
+* Use VPN mode in systemd by editing `ExecStart=/opt/kodi-docker/start.sh vpn`
+* Fully Wayland + PipeWire ready
 * Perfect for **plugin testing** with or without VPN
-
