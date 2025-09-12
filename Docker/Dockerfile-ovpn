@@ -1,0 +1,28 @@
+FROM debian:bullseye-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        net-tools \
+        curl \
+        bind9-utils \
+        openvpn \
+        iproute2 \
+        iputils-ping \
+        dante-server \
+        ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY src/sockd.conf /etc/sockd.conf
+
+# Expose SOCKS5 port
+EXPOSE 1080
+
+COPY src/wait-for-ovpn.sh /wait-for-ovpn.sh
+RUN chmod +x /wait-for-ovpn.sh
+
+# Run OpenVPN using the config
+CMD ["/wait-for-ovpn.sh"]

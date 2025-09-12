@@ -1,0 +1,45 @@
+
+services:
+
+  openvpn-client:
+    container_name: openvpn-client
+    profile: ["vpn"]
+    build:
+      context: .
+      dockerfile: Docker/Dockerfile-ovpn
+    cap_add:
+      - NET_ADMIN  # Needed to create the TUN device
+    devices:
+      - /dev/net/tun  # Required by OpenVPN
+    restart: unless-stopped
+    volumes:
+      - ./ovpn-config/client.ovpn:/etc/openvpn/client.conf:ro
+
+  kodi:
+    build:
+      context: .
+      dockerfile: Docker/Dockerfile
+    container_name: kodi
+    environment:
+      DISPLAY: "${DISPLAY}"
+      PULSE_SERVER: "${PULSE_SERVER}"
+      WAYLAND_DISPLAY: ${WAYLAND_DISPLAY}
+      XDG_RUNTIME_DIR: ${XDG_RUNTIME_DIR}
+      TZ: America/New_York
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}:${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}
+      - /run/user/1000/pulse/native:/run/user/1000/pulse/native
+      - ./kodi_home/.kodi:/root/.kodi
+    devices:
+      - /dev/dri
+      - nvidia.com/gpu=all
+    group_add:
+      - video
+    security_opt:
+      - label=type:container_runtime_t
+      - seccomp=unconfined
+      - apparmor=unconfined
+    network_mode: ${KODI_NETWORK_MODE:-bridge}
+    restart: unless-stopped
+
