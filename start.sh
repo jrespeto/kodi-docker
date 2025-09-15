@@ -19,6 +19,7 @@ if [[ "$1" == "vpn" ]]; then
     PROFILE="--profile vpn"
     export KODI_NETWORK_MODE="service:openvpn-client"
 else
+    PROFILE="--profile kodi"
     export KODI_NETWORK_MODE="bridge"
 fi
 
@@ -33,4 +34,5 @@ echo "  PULSE_SERVER=${PULSE_SERVER}"
 xhost +SI:localuser:$(whoami) >/dev/null 2>&1 || true
 
 # Start containers
-podman-compose up -d ${PROFILE}
+echo "running: podman-compose ${PROFILE} up -d"
+podman-compose ${PROFILE} up -d

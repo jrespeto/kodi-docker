@@ -3,7 +3,8 @@ services:
 
   openvpn-client:
     container_name: openvpn-client
-    profile: ["vpn"]
+    profiles:
+      - vpn
     build:
       context: .
       dockerfile: Docker/Dockerfile-ovpn
@@ -20,6 +21,9 @@ services:
       context: .
       dockerfile: Docker/Dockerfile
     container_name: kodi
+    profiles:
+      - kodi
+      - vpn
     environment:
       DISPLAY: "${DISPLAY}"
       PULSE_SERVER: "${PULSE_SERVER}"
