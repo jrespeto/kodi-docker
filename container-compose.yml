@@ -16,6 +16,19 @@ services:
     volumes:
       - ./ovpn-config/client.ovpn:/etc/openvpn/client.conf:ro
 
+  m3u-gen:
+    build:
+      context: .
+      dockerfile: Docker/Dockerfile-m3u-gen
+    container_name: m3u-gen
+    profiles:
+      - kodi
+      - vpn
+    env_file:
+      - m3u-gen.env
+    volumes:
+    - ./kodi_home/m3u_gen:/data
+
   kodi:
     build:
       context: .
@@ -35,6 +48,7 @@ services:
       - ${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}:${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}
       - /run/user/1000/pulse/native:/run/user/1000/pulse/native
       - ./kodi_home/.kodi:/root/.kodi
+      - ./kodi_home/m3u_gen:/root/m3u_gen
     devices:
       - /dev/dri
       - nvidia.com/gpu=all
